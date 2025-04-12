@@ -7,6 +7,7 @@ use Filament\Forms\Components\TextInput;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
+use App\Filament\Resources\UserResource\RelationManagers\OrdersRelationManager;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -16,12 +17,17 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
+
+    protected static ?string $recordTitleAttribute = 'name';
+
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
@@ -42,10 +48,20 @@ class UserResource extends Resource
                     ->default(now()),
 
                 Forms\Components\TextInput::make('password')
+                    // ->password()
+                    // ->required()
+                    // ->dehydrated(fn ($state) => filled($state)) //I need save the password only if it is entere
+                    // ->required(fn (Page $livewire): bool => $livewire instanceof CreateRecord),
+
                     ->password()
-                    ->required()
-                    ->dehydrated(fn ($state) => filled($state)) //I need save the password only if it is entere
-                    ->required(fn (Page $livewire): bool => $livewire instanceof CreateRecord),
+                    ->required(fn (Page $livewire): bool => $livewire instanceof CreateRecord) // Required only during creation
+                    ->dehydrated(fn ($state) => filled($state)) // Only save if the field is filled
+                    ->dehydrateStateUsing(fn ($state) => filled($state) ? Hash::make($state) : null) // Hash the password if filled, otherwise keep the existing password
+                    ->maxLength(255)
+                    ->placeholder(fn (Page $livewire): string => $livewire instanceof \App\Filament\Resources\UserResource\Pages\EditUser ? '********' : '') // Show placeholder during editing
+                    ->placeholder(fn (Page $livewire): string => $livewire instanceof \App\Filament\Resources\UserResource\Pages\ListUsers ? '********' : '') // Show placeholder during view
+                    ->helperText(fn (Page $livewire): string => $livewire instanceof \App\Filament\Resources\UserResource\Pages\EditUser ? 'Leave blank to keep the current password.' : ''), // Add helper text during editing
+
             ]);
     }
 
@@ -84,8 +100,13 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            OrdersRelationManager::class
         ];
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'email'];
     }
 
     public static function getPages(): array
