@@ -9,10 +9,14 @@ use Livewire\Component;
 class LoginPage extends Component
 {
 
+    public $email;
+
+    public $password;
+
     public function save() {
         $this->validate([
-            'email' => 'required|email|max:255|exists:users,email',
-            'password' => 'required|email|max:255',
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required',
         ]);
 
         if(!auth()->attempt([

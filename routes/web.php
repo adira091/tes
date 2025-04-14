@@ -24,6 +24,10 @@ Route::get('/products', ProductsPage::class);
 Route::get('/cart', CartPage::class);
 Route::get('/products/{slug}', ProductDetailPage::class);
 
+Route::get('/simulation', function () {
+    return view('simulation');
+});
+
 
 
 Route::middleware('guest')->group(function() {

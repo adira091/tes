@@ -24,6 +24,10 @@ return new class extends Migration
             $table->boolean('is_featured')->default(false);
             $table->boolean('in_stock')->default(true);
             $table->boolean('on_sale')->default(false);
+
+            $table->foreignId('socket_id')->nullable()->constrained('sockets')->cascadeOnDelete();
+            $table->foreignId('processor_id')->nullable();
+            $table->foreignId('motherboard_id')->nullable();
             $table->timestamps();
         });
     }

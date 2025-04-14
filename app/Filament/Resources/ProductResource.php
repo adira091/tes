@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
 use App\Filament\Resources\ProductResource\RelationManagers;
+use App\Models\Brand;
 use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
@@ -35,7 +36,7 @@ class ProductResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {
@@ -83,17 +84,31 @@ class ProductResource extends Resource
                             ->prefix('Rp')
                     ]),
                     Section::make('Associations')->schema([
+                        Select::make('brand_id')
+                            ->name('Brand')
+                            ->required()
+                            ->searchable()
+                            ->options(Brand::all()->pluck('name', 'id')),
+
+                        Select::make('socket_id')
+                                ->required()
+                                ->searchable()
+                                ->preload()
+                                ->relationship('socket', 'name'),
+
                         Select::make('category_id')
                             ->required()
                             ->searchable()
                             ->preload()
                             ->relationship('category', 'name'),
 
-                        Select::make('brand_id')
-                            ->required()
-                            ->searchable()
-                            ->preload()
-                            ->relationship('brand', 'name'),
+                        Select::afterStateUpdated(fn (Select $component) => $component
+                            ->getContainer()
+                            ->getComponent('dynamicTypeFields')
+                            ->getChildComponentContainer()
+                            ->fill())
+
+
                     ]),
 
                     Section::make('Status')->schema([
